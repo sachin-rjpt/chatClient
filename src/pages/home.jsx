@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import {io} from "socket.io-client";
 import axios from "axios"
 const socket=io("https://chat-5vv0.onrender.com");
+import renderMessage from "../utils/renderMsg";
+import renderDate from "../utils/renderDate";
+import { format } from "date-fns";
 export default function HomePage() {
     const [role,setRole]=useState(null);
     const [chat,setChat]=useState([]);
@@ -39,12 +42,12 @@ export default function HomePage() {
     if(!role){
       return(
         <>
-          <div className="flex w-screen h-screen  justify-center items-center">
-            <div className="flex-col w-1/3 h-1/3 bg-gray-300 rounded">
+          <div className="flex w-screen h-screen  justify-center items-center bg-sky-50">
+            <div className="flex-col w-1/3 h-1/3 bg-gray-100 rounded-2xl shadow-xl">
               <h2 className=" w-full h-1/4 text-center text-xl mt-4">Enter as </h2>
-              <div className="flex-col justify-center items-center">
-              <button className="button" onClick={()=>setRole("user")}>user</button>
-              <button className="button" onClick={()=>setRole("owner")}>owner</button>
+              <div className="flex-col w-full h-full justify-center items-center text-xl">
+              <button className="bg-gray-300 scale-75 rounded p-2 w-full hover:bg-gray-400 hover:scale-100 " onClick={()=>setRole("user")}>user</button>
+              <button className=" w-full scale-75 bg-green-500 p-2 rounded mt-4 hover:bg-green-600 hover:scale-100 " onClick={()=>setRole("owner")}>owner</button>
               </div>
             </div>
           </div>
@@ -53,18 +56,25 @@ export default function HomePage() {
     }
     else {
        return (
-          <div className="flex-col w-screen h-screen bg-sky-50">
+          <div className="flex-col w-screen h-screen bg-sky-20">
              <div className="flex-col w-full h-[90%] overflow-y-auto">
-                  {chat.map((e) => (    
-           <div key={e._id} className={`flex ${e.sender===role?"justify-end":"justify-start"}`}>
-            <div className={`flex w-1/2 ${e.sender===role?"justify-end":"justify-start"}`}>
-            <p  className="bg-gray-100 mx-4 my-2 p-2 rounded-xl ">{e.content}</p></div>
+                  {chat.map((e,i) => { 
+                   const msgDate=new Date(e.createdAt);
+                   const showDate=(i==0||(new Date(chat[i-1].createdAt).toDateString()!==msgDate.toDateString())); 
+              return (
+                <>
+                {showDate?<div className="flex justify-center  m-4"><p className="bg-sky-50 px-2 rounded-xl">{renderDate(msgDate)}</p></div>:null}
+           <div key={i} className={`flex ${e.sender===role?"justify-end":"justify-start"}`}>
+            <div className={`flex w-1/2  ${e.sender===role?"justify-end":"justify-start"}`}>
+            <p  className="bg-gray-100 mx-4 my-2 p-2 rounded-xl ">{renderMessage(e.content)}<span className="text-[8px] ml-4 rounded-xl border-1 p-1 border-green-300 ">{format(msgDate,"hh:mm a")}</span> </p></div>
             </div>
-            ))}
+            </>
+              )
+        })}
             <div ref={chatEndRef}></div>
              </div>
-              <form  className="flex w-full h-[10%]"onSubmit={sendMessage}>
-             <div className="flex w-full full justify-evenly ">
+              <form  className="flex w-full  h-[10%]"onSubmit={sendMessage}>
+             <div className="flex w-full  justify-evenly ">
                 <input className="w-[80%] h-[70%] rounded-xl ml-4 mt-4 pl-4 bg-white" type="text" placeholder="type here" value={msg} onChange={(e)=>setMsg(e.target.value)} />
                  <button
                  type="submit"
